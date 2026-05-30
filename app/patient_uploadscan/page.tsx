@@ -312,8 +312,4 @@ export default function PatientUploadScanPage() {
       </div>
     </div>
   )
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 28e9005 (doctor update)
