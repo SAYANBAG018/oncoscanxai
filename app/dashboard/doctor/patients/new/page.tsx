@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -24,14 +25,16 @@ import {
   collection,
   doc,
   setDoc,
-  serverTimestamp,
-  runTransaction
+  serverTimestamp
 } from 'firebase/firestore'
 
 import { db } from '@/lib/firebase'
 
+
+
 export default function NewPatientPage() {
-  const { currentUser } = useStore()
+  const router = useRouter()
+ const { currentUser } = useStore()
   
   const [formData, setFormData] = useState({
     name: '',
@@ -59,6 +62,8 @@ export default function NewPatientPage() {
       reader.readAsDataURL(file)
     }
   }
+
+
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault()
 
@@ -77,49 +82,13 @@ const handleSubmit = async (e: React.FormEvent) => {
       ],
       recommendation: 'Consult oncologist immediately'
     }
-  // Counter document reference
-const counterRef = doc(
-  db,
-  'counters',
-  'patientCounter'
-)
 
-// Generate safe patient ID
-const patientUniqueId =
-  await runTransaction(
-    db,
-    async (transaction) => {
-
-      const counterDoc =
-        await transaction.get(counterRef)
-
-      if (!counterDoc.exists()) {
-
-        throw new Error(
-          'Counter document missing'
-        )
-      }
-
-      const current =
-        counterDoc.data().current || 0
-
-      const newCount = current + 1
-
-      // Update counter
-      transaction.update(counterRef, {
-        current: newCount
-      })
-
-      // Return custom patient ID
-      return `P${newCount}`
-    }
-  )
     // Create Firestore document
     const patientRef = doc(collection(db, 'patients'))
 
     await setDoc(patientRef, {
       id: patientRef.id,
-patientUniqueId,
+
       name: formData.name,
       age: Number(formData.age),
       gender: formData.gender,
@@ -160,7 +129,21 @@ patientUniqueId,
         <div className="max-w-2xl mx-auto">
           <Card className="border-2">
             <CardContent className="pt-12 pb-8 text-center">
-              
+              {isAnalyzing ? (
+                <>
+                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 animate-pulse">
+                    <Brain className="h-10 w-10 text-primary" />
+                  </div>
+                  <h2 className="text-2xl font-bold mb-2">AI Analysis in Progress</h2>
+                  <p className="text-muted-foreground mb-4">
+                    Our AI is analyzing the scan for {formData.name}
+                  </p>
+                  <div className="flex items-center justify-center gap-2 text-primary">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Processing scan data...</span>
+                  </div>
+                </>
+              ) : (
                 <>
                   <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
                     <CheckCircle className="h-10 w-10 text-green-600" />
@@ -182,7 +165,7 @@ patientUniqueId,
                     </Link>
                   </div>
                 </>
-              
+              )}
             </CardContent>
           </Card>
         </div>
